@@ -179,9 +179,14 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
 /// If (*imgp)==NULL, no operation is performed.
 /// Ensures: (*imgp)==NULL.
 /// Should never fail, and should preserve global errno/errCause.
-void ImageDestroy(Image* imgp) { ///
-  assert (imgp != NULL);
-  // Insert your code here!
+void ImageDestroy(Image* imgp) {
+    assert(imgp != NULL);
+
+    if (*imgp != NULL) {
+        free((*imgp)->pixel);  // Libera a memória do array de pixels
+        free(*imgp);           // Libera a memória da estrutura de imagem
+        *imgp = NULL;          // Define o ponteiro para NULL para evitar uso após liberação
+    }
 }
 
 
@@ -474,11 +479,44 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
 /// Searches for img2 inside img1.
 /// If a match is found, returns 1 and matching position is set in vars (*px, *py).
 /// If no match is found, returns 0 and (*px, *py) are left untouched.
-int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
-  assert (img1 != NULL);
-  assert (img2 != NULL);
-  // Insert your code here!
+int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) {
+    assert(img1 != NULL);
+    assert(img2 != NULL);
+
+    int width1 = ImageWidth(img1);
+    int height1 = ImageHeight(img1);
+    int width2 = ImageWidth(img2);
+    int height2 = ImageHeight(img2);
+
+    // Percorre a imagem maior
+    for (int y1 = 0; y1 <= height1 - height2; ++y1) {
+        for (int x1 = 0; x1 <= width1 - width2; ++x1) {
+            int match = 1; // Assume correspondência até que se prove o contrário
+
+            // Compara a subimagem
+            for (int y2 = 0; y2 < height2 && match; ++y2) {
+                for (int x2 = 0; x2 < width2 && match; ++x2) {
+                    if (ImageGetPixel(img1, x1 + x2, y1 + y2) != ImageGetPixel(img2, x2, y2)) {
+                        // Os pixels não correspondem
+                        match = 0;
+                    }
+                }
+            }
+
+            // Se houver correspondência, define as posições e retorna 1
+            if (match) {
+                *px = x1;
+                *py = y1;
+                return 1;
+            }
+        }
+    }
+
+    // Nenhuma correspondência encontrada
+    return 0;
 }
+
+
 
 
 /// Filtering
@@ -487,7 +525,37 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur(Image img, int dx, int dy) { ///
-  // Insert your code here!
+void ImageBlur(Image img, int dx, int dy) {
+    assert(img != NULL);
+    assert(dx >= 0 && dy >= 0);
+
+    int width = ImageWidth(img);
+    int height = ImageHeight(img);
+
+    // Cria uma cópia temporária da imagem para armazenar os resultados parciais
+    Image tempImg = ImageCreate(width, height, ImageMaxval(img));
+    if (tempImg == NULL) {
+        perror("Erro ao criar imagem temporária");
+        return;
+    }
+
+    // Aplica o filtro de desfoque
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            uint8 newPixelValue = calculateWeightedAverage(img, x, y, dx, dy);
+            ImageSetPixel(tempImg, x, y, newPixelValue);
+        }
+    }
+
+    // Copia os resultados de volta para a imagem original
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            uint8 newPixelValue = ImageGetPixel(tempImg, x, y);
+            ImageSetPixel(img, x, y, newPixelValue);
+        }
+    }
+
+    // Libera a memória da imagem temporária
+    ImageDestroy(&tempImg);
 }
 
