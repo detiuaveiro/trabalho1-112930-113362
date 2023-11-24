@@ -10,11 +10,11 @@
 /// 2013, 2023
 
 // Student authors (fill in below):
-// NMec:  Name:
+// NMec: 113362  Name: Tiago Jose Costa Melo
 // 
 // 
 // 
-// Date:
+// Date: 22/11/2023
 //
 
 #include "image8bit.h"
@@ -172,6 +172,24 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert (height >= 0);
   assert (0 < maxval && maxval <= PixMax);
   // Insert your code here!
+  //Allocate memory for the Image structure
+  struct image newImage;
+  newImage.width = width;
+  newImage.height = height;
+  newImage.maxval = maxval;
+
+  //Allocate memory for each pixel value
+  newImage.pixel = (uint8*)malloc(width * height * sizeof(uint8));
+  if(newImage.pixel == NULL) {
+
+
+    return (struct image){0};
+  }
+  // Set each pixel to 0(black)
+  for (int i = 0; i < width * height; i++){
+    newImage.pixel[i] = 0;
+  }
+  return newImage;
 }
 
 /// Destroy the image pointed to by (*imgp).
