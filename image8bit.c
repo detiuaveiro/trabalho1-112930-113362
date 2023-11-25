@@ -170,33 +170,36 @@ void ImageInit(void) { ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
-Image ImageCreate(int width, int height, uint8 maxval) { ///
-  assert (width >= 0);
-  assert (height >= 0);
-  assert (0 < maxval && maxval <= PixMax);
-  // Insert your code here!
+Image ImageCreate(int width, int height, uint8 maxval) {
+  assert(width >= 0);
+  assert(height >= 0);
+  assert(0 < maxval && maxval <= PixMax);
+
+
   Image img = (Image)malloc(sizeof(struct image));
-    if (img == NULL) {
-        perror("Erro ao alocar memória para a estrutura da imagem");
-        return NULL;  
-    }
+  if (img == NULL) {
 
-    
-    img->pixel = (uint8*)malloc(sizeof(uint8) * width * height);
-    if (img->pixel == NULL) {
-        perror("Erro ao alocar memória para o array de pixels");
-        free(img); 
-        return NULL;  
-    }
+    return NULL;
+  }
 
-    
-    img->width = width;
-    img->height = height;
-    img->maxval = maxval;
 
-    return img;
+  img->pixel = (uint8)malloc(width * height * sizeof(uint8));
+  if (img->pixel == NULL) {
+
+    free(img); // Free the previously allocated Image structure
+    return NULL;
+  }
+
+
+  img->width = width;
+  img->height = height;
+  img->maxval = maxval;
+
+
+  for (int i = 0; i < width * height; i++) {
+    img->pixel[i] = 0;
+  }
 }
-
 /// Destroy the image pointed to by (*imgp).
 ///   imgp : address of an Image variable.
 /// If (*imgp)==NULL, no operation is performed.
@@ -711,30 +714,40 @@ void ImageBlur(Image img, int dx, int dy) {
 
     int width = ImageWidth(img);
     int height = ImageHeight(img);
+    uint8 maxval = ImageMaxval(img);
 
-
-    Image tempImg = ImageCreate(width, height, ImageMaxval(img));
+    Image tempImg = ImageCreate(width, height, maxval);
     if (tempImg == NULL) {
-        perror("Erro ao criar imagem temporária");
         return;
     }
 
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int sum = 0;
+            int count = 0;
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            uint8 newPixelValue = calculateWeightedAverage(img, x, y, dx, dy);
-            ImageSetPixel(tempImg, x, y, newPixelValue);
+            for (int dyOffset = -dy; dyOffset <= dy; dyOffset++) {
+                for (int dxOffset = -dx; dxOffset <= dx; dxOffset++) {
+                    int newX = x + dxOffset;
+                    int newY = y + dyOffset;
+
+                    if (ImageValidPos(img, newX, newY)) {
+                        sum += ImageGetPixel(img, newX, newY);
+                        count++;
+                    }
+                }
+            }
+
+            uint8 avg = (uint8)(sum / count);
+            ImageSetPixel(tempImg, x, y, avg);
         }
     }
 
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            uint8 newPixelValue = ImageGetPixel(tempImg, x, y);
-            ImageSetPixel(img, x, y, newPixelValue);
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            ImageSetPixel(img, x, y, ImageGetPixel(tempImg, x, y));
         }
     }
-
 
     ImageDestroy(&tempImg);
 }
