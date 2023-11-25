@@ -350,6 +350,12 @@ int ImageValidPos(Image img, int x, int y) { ///
 int ImageValidRect(Image img, int x, int y, int w, int h) { ///
   assert (img != NULL);
   // Insert your code here!
+    int topLeftValid = ImageValidPos(img, x, y);
+    int topRightValid = ImageValidPos(img, x + w - 1, y);
+    int bottomLeftValid = ImageValidPos(img, x, y + h - 1);
+    int bottomRightValid = ImageValidPos(img, x + w - 1, y + h - 1);
+    return topLeftValid && topRightValid && bottomLeftValid && bottomRightValid;
+
 }
 
 /// Pixel get & set operations
@@ -365,6 +371,9 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 static inline int G(Image img, int x, int y) {
   int index;
   // Insert your code here!
+   assert(0 <= x && x < img->width);
+    assert(0 <= y && y < img->height);
+    int index = y * img->width + x;
   assert (0 <= index && index < img->width*img->height);
   return index;
 }
@@ -373,7 +382,7 @@ static inline int G(Image img, int x, int y) {
 uint8 ImageGetPixel(Image img, int x, int y) { ///
   assert (img != NULL);
   assert (ImageValidPos(img, x, y));
-  PIXMEM += 1;  // count one pixel access (read)
+  PIXMEM += 1;  
   return img->pixel[G(img, x, y)];
 } 
 
@@ -381,7 +390,7 @@ uint8 ImageGetPixel(Image img, int x, int y) { ///
 void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
   assert (img != NULL);
   assert (ImageValidPos(img, x, y));
-  PIXMEM += 1;  // count one pixel access (store)
+  PIXMEM += 1; 
   img->pixel[G(img, x, y)] = level;
 } 
 
@@ -400,6 +409,17 @@ void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
 void ImageNegative(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
+  int width = ImageWidth(img);
+    int height = ImageHeight(img);
+    int maxval = ImageMaxval(img);
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            uint8 pixelValue = ImageGetPixel(img, x, y);
+            uint8 negativeValue = maxval - pixelValue; 
+            ImageSetPixel(img, x, y, negativeValue); 
+        }
+    }
 }
 
 /// Apply threshold to image.
@@ -408,6 +428,21 @@ void ImageNegative(Image img) { ///
 void ImageThreshold(Image img, uint8 thr) { ///
   assert (img != NULL);
   // Insert your code here!
+ int width = ImageWidth(img);
+  int height = ImageHeight(img);
+  uint8 maxval = ImageMaxval(img);
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      uint8 currentPixel = ImageGetPixel(img, x, y);
+
+      if (currentPixel < thr) {
+        ImageSetPixel(img, x, y, 0);
+      } else {
+        ImageSetPixel(img, x, y, maxval);
+      }
+    }
+  }
 }
 
 /// Brighten image by a factor.
@@ -418,6 +453,24 @@ void ImageBrighten(Image img, double factor) { ///
   assert (img != NULL);
   // ? assert (factor >= 0.0);
   // Insert your code here!
+  assert (factor >= 0.0);
+
+  int width = ImageWidth(img);
+  int height = ImageHeight(img);
+  uint8 maxval = ImageMaxval(img);
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      uint8 currentPixel = ImageGetPixel(img, x, y);
+      uint8 newPixel = (uint8)(factor * currentPixel);
+
+      if (newPixel > maxval) {
+        newPixel = maxval;
+      }
+
+      ImageSetPixel(img, x, y, newPixel);
+    }
+  }
 }
 
 
@@ -445,6 +498,24 @@ void ImageBrighten(Image img, double factor) { ///
 Image ImageRotate(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
+   int originalWidth = ImageWidth(img);
+  int originalHeight = ImageHeight(img);
+  uint8 maxval = ImageMaxval(img);
+  Image rotatedImage = ImageCreate(originalHeight, originalWidth, maxval);
+  if (rotatedImage == NULL) {
+    return NULL; 
+  }
+
+  for (int y = 0; y < originalHeight; y++) {
+    for (int x = 0; x < originalWidth; x++) {
+      int newX = y;
+      int newY = originalWidth - 1 - x;
+      ImageSetPixel(rotatedImage, newX, newY, ImageGetPixel(img, x, y));
+    }
+  }
+
+  return rotatedImage;
+
 }
 
 /// Mirror an image = flip left-right.
@@ -457,6 +528,23 @@ Image ImageRotate(Image img) { ///
 Image ImageMirror(Image img) { ///
   assert (img != NULL);
   // Insert your code here!
+  int width = ImageWidth(img);
+  int height = ImageHeight(img);
+  uint8 maxval = ImageMaxval(img);
+
+  Image mirroredImage = ImageCreate(width, height, maxval);
+  if (mirroredImage == NULL) {
+    return NULL; 
+  }
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      int newX = width - 1 - x;
+      ImageSetPixel(mirroredImage, newX, y, ImageGetPixel(img, x, y));
+    }
+  }
+
+  return mirroredImage;
 }
 
 /// Crop a rectangular subimage from img.
