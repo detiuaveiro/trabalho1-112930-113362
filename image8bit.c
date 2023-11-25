@@ -172,6 +172,26 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert (height >= 0);
   assert (0 < maxval && maxval <= PixMax);
   // Insert your code here!
+  Image img = (Image)malloc(sizeof(struct image));
+    if (img == NULL) {
+        perror("Erro ao alocar memória para a estrutura da imagem");
+        return NULL;  
+    }
+
+    
+    img->pixel = (uint8*)malloc(sizeof(uint8) * width * height);
+    if (img->pixel == NULL) {
+        perror("Erro ao alocar memória para o array de pixels");
+        free(img); 
+        return NULL;  
+    }
+
+    
+    img->width = width;
+    img->height = height;
+    img->maxval = maxval;
+
+    return img;
 }
 
 /// Destroy the image pointed to by (*imgp).
@@ -183,9 +203,9 @@ void ImageDestroy(Image* imgp) {
     assert(imgp != NULL);
 
     if (*imgp != NULL) {
-        free((*imgp)->pixel);  // Libera a memória do array de pixels
-        free(*imgp);           // Libera a memória da estrutura de imagem
-        *imgp = NULL;          // Define o ponteiro para NULL para evitar uso após liberação
+        free((*imgp)->pixel);  
+        free(*imgp);          
+        *imgp = NULL;         
     }
 }
 
@@ -299,8 +319,27 @@ int ImageMaxval(Image img) { ///
 void ImageStats(Image img, uint8* min, uint8* max) { ///
   assert (img != NULL);
   // Insert your code here!
-}
+int width = ImageWidth(img);
+  int height = ImageHeight(img);
 
+  // Inicializa os valores mínimo e máximo com o primeiro pixel
+  *min = *max = ImageGetPixel(img, 0, 0);
+
+  // Percorre todos os pixels da imagem
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      uint8 pixelValue = ImageGetPixel(img, x, y);
+
+      // Atualiza os valores mínimo e máximo
+      if (pixelValue < *min) {
+        *min = pixelValue;
+      }
+      if (pixelValue > *max) {
+        *max = pixelValue;
+      }
+    }
+  }
+}
 /// Check if pixel position (x,y) is inside img.
 int ImageValidPos(Image img, int x, int y) { ///
   assert (img != NULL);
