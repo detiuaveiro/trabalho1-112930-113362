@@ -1,5 +1,3 @@
-///test
-
 /// image8bit - A simple image processing module.
 ///
 /// This module is part of a programming project
@@ -12,7 +10,7 @@
 /// 2013, 2023
 
 // Student authors (fill in below):
-// NMec: 113362  Name: Tiago Jose Costa Melo
+// NMec: 113362;112930   Name: Tiago Jose Costa Melo;João Figueiredo
 // 
 // 
 // 
@@ -150,6 +148,7 @@ void ImageInit(void) { ///
   InstrName[0] = "pixmem";  // InstrCount[0] will count pixel array acesses
   // Name other counters here...
 
+
   
 }
 
@@ -182,10 +181,10 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
     return NULL;
   }
 
-  // Allocate memory for the pixel data
-  img->pixel = (uint8*)malloc(width * height * sizeof(uint8));
+
+  img->pixel = (uint8)malloc(width * height * sizeof(uint8));
   if (img->pixel == NULL) {
-    // Memory allocation failed for the pixel data
+
     free(img); // Free the previously allocated Image structure
     return NULL;
   }
@@ -195,15 +194,11 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   img->height = height;
   img->maxval = maxval;
 
-  // Initialize the pixels to black (0)
+
   for (int i = 0; i < width * height; i++) {
     img->pixel[i] = 0;
-
+  }
 }
- return img;
- 
-}
-
 /// Destroy the image pointed to by (*imgp).
 ///   imgp : address of an Image variable.
 /// If (*imgp)==NULL, no operation is performed.
@@ -251,6 +246,7 @@ Image ImageLoad(const char* filename) { ///
 
   int success = 
   check( (f = fopen(filename, "rb")) != NULL, "Open failed" ) &&
+  
   
   check( fscanf(f, "P%c ", &c) == 1 && c == '5' , "Invalid file format" ) &&
   skipComments(f) >= 0 &&
