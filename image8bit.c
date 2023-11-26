@@ -173,11 +173,11 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert (width >= 0);
   assert (height >= 0);
   assert (0 < maxval && maxval <= PixMax);
-  // Insert your code here!
+
 
   Image img = (Image)malloc(sizeof(struct image));
   if (img == NULL) {
-    // Memory allocation failed for the Image structure
+    
     return NULL;
   }
 
@@ -185,11 +185,11 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   img->pixel = (uint8)malloc(width * height * sizeof(uint8));
   if (img->pixel == NULL) {
 
-    free(img); // Free the previously allocated Image structure
+    free(img); 
     return NULL;
   }
 
-  // Initialize the image properties
+  
   img->width = width;
   img->height = height;
   img->maxval = maxval;
@@ -198,6 +198,7 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   for (int i = 0; i < width * height; i++) {
     img->pixel[i] = 0;
   }
+  return img;
 }
 /// Destroy the image pointed to by (*imgp).
 ///   imgp : address of an Image variable.
